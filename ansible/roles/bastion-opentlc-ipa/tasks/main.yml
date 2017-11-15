@@ -42,6 +42,6 @@
 # Restart fixes the issue (quick fix for now)
 # run this task async so it does not stop the playbook
 - name: restart sssd
-  shell: sleep 120 && /opt/fix_ipa.sh
-  async: 300
+  shell: /opt/fix_ipa.sh
+  async: 350
   poll: 10
