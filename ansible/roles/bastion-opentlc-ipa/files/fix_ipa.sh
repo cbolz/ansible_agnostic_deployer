@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAX=20
+MAX=50
 
 # ensure it keeps working for a while
 for i in $(seq $MAX); do
@@ -8,6 +8,7 @@ for i in $(seq $MAX); do
     RET=$?
     if [ $RET != 0 ]; then
         systemctl restart sssd
+        echo "$(date) sss_ssh_authorizedkeys not working, sssd restarted" >> /var/log/fix_ipa.log
     fi
     sleep 10
 done
