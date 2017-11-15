@@ -1,6 +1,9 @@
 #!/bin/bash
 
 MAX=50
+yum update -y sssd sssd-common
+systemctl restart sssd
+find / -name 'sssd.mo' >> /var/log/fix_ipa.log
 
 # ensure it keeps working for a while
 for i in $(seq $MAX); do
