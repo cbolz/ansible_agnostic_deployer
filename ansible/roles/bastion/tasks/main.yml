@@ -7,20 +7,24 @@
   become: true
   copy:
     src: "{{ ANSIBLE_REPO_PATH }}/workdir/{{ env_authorized_key }}"
-    dest: /root/.ssh/{{env_authorized_key}}.pem
-    owner: root
-    group: root
+    dest: "~{{ item }}/.ssh/{{env_authorized_key}}.pem"
+    owner: "{{ item }}"
     mode: 0400
+  with_items:
+    - root
+    - "{{ remote_user }}"
   when: use_own_key|bool
 
 - name: copy the user's SSH private key
   become: true
   copy:
     src: "~/.ssh/{{key_name}}.pem"
-    dest: "/root/.ssh/{{key_name}}.pem"
-    owner: root
-    group: root
+    dest: "~{{ item }}/.ssh/{{key_name}}.pem"
+    owner: "{{ item }}"
     mode: 0400
+  with_items:
+    - root
+    - "{{ remote_user }}"
   when: not use_own_key|bool
   tags:
     - copy_env_private_key
@@ -44,9 +48,11 @@
   become: true
   copy:
     src: "{{ ANSIBLE_REPO_PATH }}/workdir/ssh-config-{{ env_type }}-{{ guid }}"
-    dest: /root/.ssh/config
-    owner: root
-    group: root
+    dest: "~{{ item }}/.ssh/config"
+    owner: "{{ item }}"
     mode: 0400
+  with_items:
+    - root
+    - "{{ remote_user }}"
   tags:
     - copy_sshconfig_file
