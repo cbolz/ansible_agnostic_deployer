@@ -99,8 +99,8 @@ common_packages:
 ## This is only used if the RHN/Satellite repo method is used.
 rhel_repos:
   - rhel-7-server-rpms
-  - rhel-7-server-extras-rpms
-  - epel-release-latest-7
+#  - rhel-7-server-extras-rpms
+#  - epel-release-latest-7
 ## Currently there is no NFS created for this Environment - See ocp-workshop for clues.
 # ## NFS Server settings
 # nfs_vg: nfsvg
@@ -154,6 +154,7 @@ rtb_private_name_tag: "{{subdomain_base}}-private"
 
 
 cf_template_description: "{{ env_type }}-{{ guid }} Ansible Agnostic Deployer "
+
 extra_host_groups:
   - name: webservers
     hosts:
@@ -161,3 +162,31 @@ extra_host_groups:
       - webserver0
       - webserver1
 
+################################################################################
+#### CLOUD PROVIDER: RAVELLO SPECIFIC VARIABLES
+################################################################################
+
+ansible_ssh_private_key_file: '{{ ANSIBLE_REPO_PATH }}/workdir/{{ env_authorized_key }}'
+blueprint_name: "{{env_type}}.{{guid}}"
+application_name: "{{blueprint_name}}.app"
+wait_timeout: 1800
+
+blueprint_description: "some text describing the blueprint created by agnostic deployer"
+application_description: "some text describing the blueprint created by agnostic deployer"
+
+# set ravello default timeout to 90 mins
+env_expire: 90
+
+app_template:
+
+extra_host_groups:
+  - name: OSP_Nodes
+    hosts:
+      - "{{ ('tag_' ~ env_type ~ '_' ~ guid ~ '_' ~ 'osptokyo') | replace('-', '_') }}"
+      - "{{ ('tag_' ~ env_type ~ '_' ~ guid ~ '_' ~ 'ospparis') | replace('-', '_') }}"
+      - "{{ ('tag_' ~ env_type ~ '_' ~ guid ~ '_' ~ 'ospnewyork') | replace('-', '_') }}"
+
+exports_template: '{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/files/exports.j2'
+glance_image_url: /mnt/cloud_images
+
+bastion_image_disk_size: 60
