@@ -1,0 +1,61 @@
+#set ft=ansible
+---
+- name: get the default ip of localhost
+  hosts: localhost
+  tasks:
+    - debug:
+        var: ansible_default_ipv4.address
+
+- name: Test access to bastion by setting motd
+  hosts:
+    - "{{ ('tag_' ~ env_type ~ '_' ~ guid ~ '_bastion') | replace('-', '_') }}"
+  remote_user: cloud-user
+  become: true
+  vars_files:
+    - "{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/env_vars.yml"
+    - "{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/env_secret_vars.yml"
+  tasks:
+    - name: bastion ansible_host
+      debug:
+        var: ansible_host
+    - name: bastion ip
+      debug:
+        var: ansible_default_ipv4.address
+    - copy:
+        content: "Welcome to Bastion. We hope you enjoy your stay.\n"
+        dest: /etc/motd
+      register: motd_changed
+      until: motd_changed | success
+      retries: 3
+      delay: 25
+    - debug:
+        var: ansible_host
+
+# Install apache on webservers
+- name: Install additional software on webservers
+  # This specifies ansible to use the webservers host group we created
+  hosts: "{{ ('tag_' ~ env_type ~ '_' ~ guid ~ '_webservers') | replace('-', '_') }}"
+  become: true
+  vars_files:
+    - "{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/env_vars.yml"
+    - "{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/env_secret_vars.yml"
+    - "{{ ANSIBLE_REPO_PATH }}/configs/{{ env_type }}/ssh_vars.yml"
+  vars:
+    # Get the tag we gave to our host
+    - host_tag: "{{ inventory_hostname | replace('.example.com', '') }}"
+  tasks:
+    - name: webservers - install apache
+      yum:
+        name: "apache"
+        state: latest
+    - name: create index.html
+      copy:
+        content: "Hello from {{ host_tag }}!"
+        dest: /var/www/index.html
+      notify: restart httpd
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+
